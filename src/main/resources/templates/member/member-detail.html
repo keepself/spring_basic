@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>상세보기</title>
+<!--    id가 update form인 객체의스타일 속성중 display를 none으로 바꾼다.-->
+    <style>
+
+        #update-form{
+            display: none;
+        }
+    </style>
+<!--    function은 script안에 적는다-->
+<!--    function을 적고 -> function이름을 적고 -> 괄호를 해서 parameter를받고 -> 중괄호를 열고닫는다.-->
+<!--    document.getElementById로 id가 update form인 객체의 스타일을 속성중 display를 block으로 변경한다. -->
+    <script>
+        function updateMember() {
+            document.getElementById('update-form').style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+<div th:replace="member/header :: headerFragment"></div>
+<p>이름 : <span th:text="${member.name}"></span></p>
+<p>이메일 : <span th:text="${member.email}"></span></p>
+<p>비밀번호 : <span th:text="${member.password}"></span></p>
+<p>가입일시 : <span th:text="${member.create_time}"></span></p>
+<!--onclick 으로 updateMember함수를 호출한다. 위의 function함수를 호출하면 style에 지정되어있던 none이 block으로 바뀌며 수정
+detail이 보인다-->
+<button onclick="updateMember()">수정</button><button><a th:href="@{/member/delete(id=${member.id})}">삭제</a></button>
+<!--얘가 바로 id가 updat-form인 애다-->
+<!--th:value="${member.id}" 컨트롤러에서 모델객체에 attribute해서 name을 member로 보내 데이터를 member.id로 꺼내서 setting햇다-->
+<form id="update-form" action="/member/update" method="post">
+    <p>id : <input type="text" name="id" th:value="${member.id}" readonly></p>
+    <p>이름 : <input type="text" name="name" th:value="${member.name}"></p>
+    <p>이메일 : <input type="text" name="email" th:value="${member.email}" readonly></p>
+    <p>비밀번호 : <input type="text" name="password" th:value="${member.password}"></p>
+    <p><input type="submit" value="수정완료"></p>
+</form>
+
+
+</body>
+</html>
