@@ -1,0 +1,87 @@
+# 워크플로우의 이름을 지정
+name: Deploy to Ec2 With Jar
+
+# push 이벤트 지정
+# main 브랜치에 push 될때마다 워크플로우가 실행되도록 지정
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 작업의 이름 지정
+  build-and-deploy:
+    # 가상 OS 공간
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # 그냥 이름임
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        # 이동한 폴더 위치
+        working-directory: ./SpringOrdering
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bootJar
+
+      - name: Copy jar to ec2
+        # scp git repo 이름과 브랜치이
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST1 }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./SpringOrdering/build/libs/*.jar"
+          target: "/home/${{ secrets.EC2_USERNAME }}"
+
+      - name: install java and run jar on ec2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST1 }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            if ! type java > /dev/null; then
+              sudo apt update && sudo apt install openjdk-11-jdk -y
+            else
+              echo "java is already installed"
+            fi
+            sudo killall java || true
+            nohup java -jar /home/${{ secrets.EC2_USERNAME }}/SpringOrdering/build/libs/*.jar \
+            --spring.datasource.url=jdbc:mariadb://${{ secrets.DB_HOST }}:3306/spring_order \
+            --spring.datasource.username=${{ secrets.DB_USERNAME }} \
+            --spring.datasource.password=${{ secrets.DB_PASSWORD }} > /home/${{ secrets.EC2_USERNAME }}/app.log 2>&1 &
+
+
+      - name: Copy jar to second server ec2
+        # scp git repo 이름과 브랜치이
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST2 }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./SpringOrdering/build/libs/*.jar"
+          target: "/home/${{ secrets.EC2_USERNAME }}"
+
+      - name: install java and run jar on second server ec2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST2 }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            if ! type java > /dev/null; then
+              sudo apt update && sudo apt install openjdk-11-jdk -y
+            else
+              echo "java is already installed"
+            fi
+            sudo killall java || true
+            nohup java -jar /home/${{ secrets.EC2_USERNAME }}/SpringOrdering/build/libs/*.jar \
+            --spring.datasource.url=jdbc:mariadb://${{ secrets.DB_HOST }}:3306/spring_order \
+            --spring.datasource.username=${{ secrets.DB_USERNAME }} \
+            --spring.datasource.password=${{ secrets.DB_PASSWORD }} > /home/${{ secrets.EC2_USERNAME }}/app.log 2>&1 &
