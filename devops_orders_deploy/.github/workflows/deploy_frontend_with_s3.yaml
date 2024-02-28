@@ -22,10 +22,11 @@ jobs:
           node version: '20'
 
       - name: npm install
+        working-directory: ./ordering-frontend
         run: npm install
 
       - name: npm build
-        run: npm build
+        run: npm run build
 
       - name: setup aws cli
         uses: aws-actions/configure-aws-credentials@v2
@@ -37,4 +38,4 @@ jobs:
 
       - name: deploy to s3
         run: |
-          aws s3 cp ./dist s3://ordersystem-vue/ --recursive
+          aws s3 cp ./ordering-frontend/dist s3://ordersystem-vue/ --recursive
