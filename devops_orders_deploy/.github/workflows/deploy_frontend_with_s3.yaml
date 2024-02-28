@@ -26,6 +26,7 @@ jobs:
         run: npm install
 
       - name: npm build
+        working-directory: ./ordering-frontend
         run: npm run build
 
       - name: setup aws cli
@@ -37,5 +38,6 @@ jobs:
 
 
       - name: deploy to s3
+        working-directory: ./ordering-frontend
         run: |
-          aws s3 cp ./ordering-frontend/dist s3://ordersystem-vue/ --recursive
+          aws s3 cp ./dist s3://ordersystem-vue/ --recursive
